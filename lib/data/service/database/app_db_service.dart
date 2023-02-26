@@ -1,20 +1,20 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:derasika3/domain/entity/derasika_db/derasika_db.dart';
+import 'package:derasika3/domain/entity/db/derasika_db.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart';
 
-final appDBProvider = Provider((_) => AppDB());
+final appDBServiceProvider = Provider((_) => AppDBService());
 
-class AppDB {
-  AppDB._internal();
+class AppDBService {
+  AppDBService._internal();
   final _dbName = 'derasika.db';
   bool _initialized = false;
   Database? _database;
 
-  static final AppDB _appDatabase = AppDB._internal();
+  static final AppDBService _appDatabase = AppDBService._internal();
 
   Future<Database> get connection async {
     if (_database == null || !_initialized) {
@@ -38,11 +38,20 @@ class AppDB {
     final directory = await getApplicationDocumentsDirectory();
     final path = join(directory.path, _dbName);
     final appDB = File(path);
+    // TODO 読み込んだファイルが読み込めるか検証する
     await appDB.writeAsBytes(derasikaDB.bytes);
     await _initialize();
   }
 
-  factory AppDB() {
+  Future<DerasikaDB> getAsFile() async {
+    final directory = await getApplicationDocumentsDirectory();
+    final path = join(directory.path, _dbName);
+    final appDB = File(path);
+    final bytes = await appDB.readAsBytes();
+    return DerasikaDB(bytes);
+  }
+
+  factory AppDBService() {
     return _appDatabase;
   }
 }
